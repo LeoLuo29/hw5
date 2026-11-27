@@ -7,10 +7,11 @@
 
 #pragma once
 
-#include "mothership.h"
-#include "seafloor_survey.h"
+#include <vector>
 
-// #include "examples/robot_selector.h" // EXAMPLE
+#include "mothership.h"
+#include "robot_selector.h"
+#include "seafloor_survey.h"
 
 class Search
 {
@@ -22,10 +23,26 @@ public:
 private:
   Mothership &mothership; // REQUIRED
 
-  SeafloorSurvey seafloorSurvey; // OPTIONAL
+  SeafloorSurvey seafloorSurvey;
+  RobotSelector robotSelector;
 
-  // int robotsExplored = 0; // EXAMPLE
-  // RobotSelector robotSelector; // EXAMPLE
+  // Per robot: last safe segment (before its first abyss, within the tether)
+  // and current position. Indexed by robot.
+  std::vector<int> lastSegment;
+  std::vector<int> position;
 
-  // bool isReachable(int robot) const; // EXAMPLE
+  long long segmentsExplored = 0;
+
+  void computeLastSegments();
+  int signalAt(int robot) const;
+  // Depth minus a bonus for excess debris nearby; the sweep advances the
+  // robot with the lowest key.
+  int sweepKeyOf(int robot) const;
+  double backgroundRate() const;
+  // Signal at or above which a robot counts as a lead rather than noise.
+  int hotThreshold() const;
+  // The waiting robot to drive next. Precondition: selector not empty.
+  int chooseNextRobot() const;
+  // Re-rank `robot`'s waiting neighbours after it found debris or moved.
+  void refreshNeighbours(int robot);
 };
